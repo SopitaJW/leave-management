@@ -1,13 +1,11 @@
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
--- Create Department
 create table Department (
 	DepartmentID int auto_increment primary key,
 	DepartmentName varchar(100) not null
 );
 
--- Create Employees
 create table Employees (
 	EmployeeID int primary key,
 	FirstName varchar(50) not null,
@@ -22,7 +20,6 @@ create table Employees (
 	foreign key(ManagerID) references Employees(EmployeeID)
 );
 
--- Create UserAccount
 create table UserAccount (
 	UserID int auto_increment primary key,
 	UserName varchar(50) not null,
@@ -32,7 +29,6 @@ create table UserAccount (
 	foreign key(EmployeeID) references Employees(EmployeeID)
 );
 
--- Create LeaveType
 create table LeaveType (
 LeaveTypeID int auto_increment primary key,
 LeaveTypeName varchar(50) not null,
@@ -40,7 +36,6 @@ MaxDays int,
 Description varchar(255)
 );
 
--- Create LeaveEntitlement
 create table LeaveEntitlement (
 	EntitlementID int auto_increment primary key,
 	EmployeeID int,
@@ -53,7 +48,6 @@ create table LeaveEntitlement (
 	foreign key(LeaveTypeID) references LeaveType(LeaveTypeID)
 );
 
--- Create LeaveRequest
 create table LeaveRequest (
 	LeaveRequestID int auto_increment primary key,
 	StartDate date not null,
@@ -71,7 +65,10 @@ create table LeaveRequest (
 	foreign key(ApproverID) references Employees(EmployeeID)
 ) auto_increment = 2001;
 
-insert into Department (DepartmentName) values 
+
+
+insert into Department (DepartmentName)
+values 
 ('HR Department'),
 ('IT Department'),
 ('Administration Department');
@@ -80,15 +77,15 @@ insert into Employees (EmployeeID, FirstName, LastName, Email, Phone, Position, 
 (1004, 'Suwapich', 'Arsa', 'suwapich_a@company.com', '0623418995', 'Office Assistant', '2020-05-05', 3, NULL);
 
 insert into Employees (EmployeeID, FirstName, LastName, Email, Phone, Position, HireDate, DepartmentID, ManagerID) values
-(1001, 'Sopita', 'Jengswiwong', 'sopita_j@company.com', '0612345678', 'Developer', '2023-12-18', 2, 1004),
+(1001, 'Sopita', 'Jengsiwong', 'sopita_j@company.com', '0612345678', 'Developer', '2023-12-18', 2, 1004),
 (1002, 'Meenlada', 'Kaewpinij', 'meenlada_k@company.com', '0859124637', 'Database Administrator', '2021-08-10', 2, 1004),
 (1003, 'Sasitorn', 'Kitcharoen', 'sasitorn_k@company.com', '0945781203', 'HR Officer', '2023-05-20', 1, 1004);
 
 insert into UserAccount (UserName, Password, Role, EmployeeID) values
-('Johnson', '20367', 'Manager', 1001),
-('Kanto', '30467', 'Employee', 1002),
-('Param', '55123', 'Employee', 1003),
-('Yuri', '66789', 'Employee', 1004);
+('Johnson', SHA2('20367', 256), 'Manager', 1001),
+('Kanto',   SHA2('30467', 256), 'Employee', 1002),
+('Param',   SHA2('55123', 256), 'Employee', 1003),
+('Yuri',    SHA2('66789', 256), 'Employee', 1004);
 
 insert into LeaveType (LeaveTypeName, MaxDays, Description) values
 ('ลาป่วย', 20, 'ใช้เมื่อต้องการลาหยุดเนื่องจากป่วย หรือมีใบรับรองแพทย์'),
