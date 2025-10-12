@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { HomeIcon, BookOpenIcon } from '@heroicons/react/outline';
+import { HomeIcon} from '@heroicons/react/outline';
 
 const NotFound = () => {
   return (
@@ -18,18 +18,10 @@ const NotFound = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link 
             to="/"
-            className="inline-flex items-center px-6 py-3 bg-viridian-600 text-white 
+            className="inline-flex items-center px-6 py-3 bg-viridian-600 text-black 
               font-semibold rounded-lg hover:bg-viridian-700 transition-colors">
             <HomeIcon className="h-5 w-5 mr-2" />
             กลับหน้าแรก
-          </Link>
-          <Link 
-            to="/books"
-            className="inline-flex items-center px-6 py-3 bg-white text-viridian-600 
-              font-semibold rounded-lg border-2 border-viridian-600 
-              hover:bg-viridian-50 transition-colors">
-            <BookOpenIcon className="h-5 w-5 mr-2" />
-            ดูหนังสือทั้งหมด
           </Link>
         </div>
       </div>
