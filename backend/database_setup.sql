@@ -1,5 +1,3 @@
--- ไม่ต้องใช้ CREATE/USE DATABASE ใน SQLite
-
 CREATE TABLE IF NOT EXISTS Department (
 	DepartmentID INTEGER PRIMARY KEY AUTOINCREMENT,
 	DepartmentName TEXT NOT NULL
@@ -71,10 +69,10 @@ CREATE TABLE IF NOT EXISTS LeaveRequest (
 INSERT INTO Department (DepartmentName) VALUES ('HR Department'), ('IT Department'), ('Administration Department');
 
 INSERT INTO Employees (EmployeeID, FirstName, LastName, Email, Phone, Position, HireDate, DepartmentID, ManagerID) VALUES
-(1004, 'Suwapich', 'Arsa', 'suwapich_a@company.com', '0623418995', 'Office Assistant', '2020-05-05', 3, NULL),
-(1001, 'Sopita', 'Jengsiwong', 'sopita_j@company.com', '0612345678', 'Developer', '2023-12-18', 2, 1004),
-(1002, 'Meenlada', 'Kaewpinij', 'meenlada_k@company.com', '0859124637', 'Database Administrator', '2021-08-10', 2, 1004),
-(1003, 'Sasitorn', 'Kitcharoen', 'sasitorn_k@company.com', '0945781203', 'HR Officer', '2023-05-20', 1, 1004);
+(1004, 'Suwapich', 'Arsa', 'suwapich_a@company.com', '0623418995', 'Office Assistant', '2020-05-05', 3, 1001),
+(1001, 'Sopita', 'Jengsiwong', 'sopita_j@company.com', '0612345678', 'Developer', '2023-12-18', 2, NULL),
+(1002, 'Meenlada', 'Kaewpinij', 'meenlada_k@company.com', '0859124637', 'Database Administrator', '2021-08-10', 2, 1001),
+(1003, 'Sasitorn', 'Kitcharoen', 'sasitorn_k@company.com', '0945781203', 'HR Officer', '2023-05-20', 1, 1001);
 
 -- ลบการเข้ารหัส SHA2 ออกก่อน เราจะจัดการในแอปพลิเคชัน
 INSERT INTO UserAccount (UserName, Password, Role, EmployeeID) VALUES
@@ -90,16 +88,23 @@ INSERT INTO LeaveType (LeaveTypeName, MaxDays, Description) VALUES
 ('ลาคลอด', 90, 'ใช้สำหรับพนักงานหญิงที่ลาคลอด');
 
 INSERT INTO LeaveEntitlement (EmployeeID, Year, LeaveTypeID, TotalDays, UsedDays) VALUES
-(1001, 2025, 4, 90, 19),
+(1001, 2025, 4, 90, 0),
+(1001, 2025, 1, 20, 0),  
+(1001, 2025, 2, 10, 0),  
+(1001, 2025, 3, 15, 0),  
 (1002, 2025, 1, 20, 0),  
 (1002, 2025, 2, 10, 4),  
 (1002, 2025, 3, 15, 0),  
 (1002, 2025, 4, 90, 0),  
 (1003, 2025, 4, 60, 28),
-(1004, 2025, 1, 20, 0);
+(1004, 2025, 4, 90, 0),
+(1004, 2025, 1, 20, 1),  
+(1004, 2025, 2, 10, 0),  
+(1004, 2025, 3, 15, 0); 
 
 INSERT INTO LeaveRequest (StartDate, EndDate, Reason, Status, RequestDate, ApprovalDate, ApproverComment, EmployeeID, LeaveTypeID, ApproverID) VALUES
 ('2025-09-10','2025-09-12','ป่วย (มีไข้)', 'อนุมัติแล้ว', '2025-09-09', '2025-09-10', 'อนุมัติเรียบร้อย', 1001, 1, 1004),
 ('2025-10-01','2025-10-02','ลากิจ', 'รออนุมัติ', '2025-09-30', NULL, 'กำลังรอการอนุมัติ', 1002, 2, 1004),
 ('2025-08-15','2025-08-20','ลาพักร้อน', 'อนุมัติแล้ว', '2025-08-10', '2025-08-12', 'อนุมัติเรียบร้อย', 1003, 3, 1004),
-('2025-09-05','2025-09-06','ไปธุระกับครอบครัว','ไม่อนุมัติ', '2025-09-04', '2025-09-05', 'ลาหลายครั้งเกินไป', 1004, 4, 1004);
+('2025-09-02','2025-09-02','มีนัดพบแพทย์', 'อนุมัติแล้ว', '2025-09-01', '2025-09-01', 'อนุมัติเรียบร้อย', 1004, 1, 1004),
+('2025-09-05','2025-09-06','ไปธุระกับครอบครัว','ไม่อนุมัติ', '2025-09-04', '2025-09-05', 'ลาหลายครั้งเกินไป', 1004, 2, 1004);

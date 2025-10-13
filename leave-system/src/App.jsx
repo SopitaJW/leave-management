@@ -23,6 +23,7 @@ import Profile from './pages/employee/Profile'; // ✅ แก้ชื่อใ�
 import ManagerDashboard from './pages/manager/ManagerDashboard';
 import ApproveLeave from './pages/manager/ApproveLeave';
 import ProfileM from './pages/manager/Profile_m'; // ✅ แก้ชื่อให้ตรง path
+import TeamLeaveHistory from './pages/manager/TeamLeaveHistory';
 
 // Shared Pages
 import Settings from './pages/shared/Settings';
@@ -81,6 +82,7 @@ function App() {
                     <Route path="profilem" element={<ProfileM />} />
                     <Route path="leave-history" element={<LeaveHistory />} />
                     <Route path="leave-request" element={<LeaveRequest />} />
+                    <Route path="team-leave" element={<TeamLeaveHistory />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </LayoutWrapper>

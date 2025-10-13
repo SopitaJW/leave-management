@@ -99,9 +99,8 @@ app.post('/api/request', (req, res) => {
         INSERT INTO LeaveRequest (StartDate, EndDate, Reason, RequestDate, EmployeeID, LeaveTypeID, ApproverID)
         VALUES (?, ?, ?, DATE('now'), ?, ?, ?)
     `;
-    // สมมติว่า ApproverID คือ Manager ของพนักงาน (ต้อง query หาก่อนในชีวิตจริง)
-    // ในตัวอย่างนี้จะใส่ ManagerID ของ Employee 1002 คือ 1004
-    const approverId = 1004; 
+  
+    const approverId = 1001; 
     const params = [startDate, endDate, reason, employeeId, leaveTypeId, approverId];
 
     db.run(sql, params, function (err) {
@@ -253,6 +252,129 @@ app.put('/api/manager/requests/:id', (req, res) => {
                 });
             });
         });
+    });
+});
+
+// --- API Endpoint สำหรับ Manager Dashboard ---
+app.get('/api/manager/dashboard-stats/:managerId', async (req, res) => {
+    const { managerId } = req.params;
+
+    const dbQuery = (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+            db.all(sql, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    };
+
+    try {
+        // 1. ดึงข้อมูล Manager
+        const managerInfoPromise = dbQuery(`
+            SELECT FirstName, LastName, EmployeeID, Position, d.DepartmentName
+            FROM Employees e
+            JOIN Department d ON e.DepartmentID = d.DepartmentID
+            WHERE e.EmployeeID = ?
+        `, [managerId]);
+
+        // 2. ดึงข้อมูลสรุปของทีม
+        const teamStatsPromise = dbQuery(`
+            SELECT
+                (SELECT COUNT(*) FROM Employees WHERE ManagerID = ?) AS totalEmployees,
+                (SELECT COUNT(DISTINCT lr.EmployeeID) FROM LeaveRequest lr JOIN Employees e ON lr.EmployeeID = e.EmployeeID WHERE e.ManagerID = ? AND lr.Status = 'อนุมัติแล้ว' AND DATE('now') BETWEEN lr.StartDate AND lr.EndDate) AS onLeaveToday,
+                (SELECT COUNT(*) FROM LeaveRequest lr JOIN Employees e ON lr.EmployeeID = e.EmployeeID WHERE e.ManagerID = ? AND lr.Status = 'รออนุมัติ') AS pendingRequests
+        `, [managerId, managerId, managerId]);
+
+        // 3. ดึงคำขอลาล่าสุด 3 รายการ
+        const recentRequestsPromise = dbQuery(`
+            SELECT
+                lr.LeaveRequestID AS id,
+                emp.FirstName || ' ' || emp.LastName AS name,
+                lt.LeaveTypeName AS type,
+                (JULIANDAY(lr.EndDate) - JULIANDAY(lr.StartDate)) + 1 AS days,
+                lr.Status AS status,
+                lr.StartDate AS start,
+                lr.EndDate AS end
+            FROM LeaveRequest lr
+            JOIN Employees emp ON lr.EmployeeID = emp.EmployeeID
+            JOIN LeaveType lt ON lr.LeaveTypeID = lt.LeaveTypeID
+            WHERE emp.ManagerID = ?
+            ORDER BY lr.RequestDate DESC
+            LIMIT 3
+        `, [managerId]);
+
+        const [managerInfoResult, teamStatsResult, recentRequests] = await Promise.all([
+            managerInfoPromise,
+            teamStatsPromise,
+            recentRequestsPromise
+        ]);
+
+        res.json({
+            data: {
+                managerInfo: managerInfoResult[0],
+                teamStats: teamStatsResult[0],
+                recentRequests: recentRequests
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ "error": error.message });
+    }
+});
+
+// --- API Endpoint สำหรับหน้าประวัติการลาของทีม ---
+app.get('/api/manager/team-history/:managerId', (req, res) => {
+    const { managerId } = req.params;
+    const { search = '', status = 'All', type = 'All' } = req.query;
+
+    let sql = `
+        SELECT
+            lr.LeaveRequestID AS id,
+            emp.FirstName || ' ' || emp.LastName AS employeeName, -- เพิ่มชื่อพนักงาน
+            lt.LeaveTypeName AS leaveType,
+            lr.StartDate,
+            lr.EndDate,
+            (JULIANDAY(lr.EndDate) - JULIANDAY(lr.StartDate)) + 1 AS days,
+            lr.Status,
+            lr.Reason,
+            lr.RequestDate,
+            lr.ApproverComment
+        FROM LeaveRequest lr
+        JOIN Employees emp ON lr.EmployeeID = emp.EmployeeID
+        JOIN LeaveType lt ON lr.LeaveTypeID = lt.LeaveTypeID
+        WHERE emp.ManagerID = ? -- เงื่อนไขหลัก: ค้นหาจาก ManagerID
+    `;
+    const params = [managerId];
+
+    // เพิ่มเงื่อนไขการค้นหา (Search)
+    if (search) {
+        sql += ' AND (emp.FirstName LIKE ? OR emp.LastName LIKE ? OR lr.Reason LIKE ? OR lt.LeaveTypeName LIKE ?)';
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+    }
+
+    // เพิ่มเงื่อนไขการกรองสถานะ (Status)
+    if (status && status !== 'All') {
+        const statusMap = {
+            'Approved': 'อนุมัติแล้ว',
+            'Pending': 'รออนุมัติ',
+            'Rejected': 'ไม่อนุมัติ'
+        };
+        sql += ' AND lr.Status = ?';
+        params.push(statusMap[status]);
+    }
+    
+    // เพิ่มเงื่อนไขการกรองประเภทการลา (Type)
+    if (type && type !== 'All') {
+        sql += ' AND lt.LeaveTypeName = ?';
+        params.push(type);
+    }
+
+    sql += ' ORDER BY lr.RequestDate DESC';
+
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ "error": err.message });
+        res.json({ "data": rows });
     });
 });
 

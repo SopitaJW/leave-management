@@ -34,10 +34,10 @@ const Profile = () => {
   // Mock Data - แทนที่ด้วย API
   const [profileData, setProfileData] = useState({
     // Basic Info
-    employeeId: 'EMP001',
-    firstName: 'สมชาย',
-    lastName: 'ใจดี',
-    email: 'somchai@company.com',
+    employeeId: 'ID : 1004',
+    firstName: 'สุวพิชญ์',
+    lastName: 'อาษา',
+    email: 'Suwapich@silpakorn.edu',
     phone: '081-234-5678',
     
     // Work Info
@@ -51,8 +51,8 @@ const Profile = () => {
     nationalId: '1234567890123',
     address: '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
     emergencyContact: {
-      name: 'สมหญิง ใจดี',
-      relation: 'คู่สมรส',
+      name: 'โสภิตา เจ็งศรีวงศ์',
+      relation: 'เพื่อนสนิท',
       phone: '081-999-8888'
     },
     

@@ -40,8 +40,8 @@ const Login = () => {
       // ✅ [2] userData mock — ในระบบจริงจะได้จาก response.data
       const userData = {
         id: 1,
-        name: 'สมชาย ใจดี',
-        email: 'somchai@example.com',
+        name: 'สุวพิชญ์ อาษา',
+        email: 'Suwapich@silpakorn.edu',
         role: 'employee',
         department: 'IT'
       };
@@ -51,8 +51,8 @@ const Login = () => {
     } else if (username === 'manager' && password === '1234') {
       const userData = {
         id: 2,
-        name: 'สมหญิง รักงาน',
-        email: 'somying@example.com',
+        name: 'โสภิตา เจ็งศรีวงศ์',
+        email: 'sopita@silpakorn.edu',
         role: 'manager',
         department: 'IT'
       };

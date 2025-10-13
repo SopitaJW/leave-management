@@ -22,9 +22,9 @@ const EmployeeDashboard = () => {
   // 🔌 API: ดึงข้อมูล Dashboard จาก Backend
   // ========================================
   const [userData] = useState({
-    firstName: 'สมชาย',
-    lastName: 'ใจดี',
-    employeeId: 'EMP001',
+    firstName: 'สุวพิชญ์',
+    lastName: 'อาษา',
+    employeeId: 'ID : 1004',
     department: 'IT',
     position: 'Software Developer',
     profileImage: null

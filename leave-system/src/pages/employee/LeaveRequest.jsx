@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
 // สมมติว่าเราได้ EmployeeID ของคนที่ login เข้ามาแล้ว
-const CURRENT_EMPLOYEE_ID = 1002; 
+const CURRENT_EMPLOYEE_ID = 1004; 
 
 // สีสำหรับประเภทการลา (สามารถดึงมาจาก DB หรือกำหนดไว้ที่นี่ก็ได้)
 const leaveTypeColors = {
