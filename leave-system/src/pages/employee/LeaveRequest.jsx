@@ -4,9 +4,9 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
 // สมมติว่าเราได้ EmployeeID ของคนที่ login เข้ามาแล้ว
-const CURRENT_EMPLOYEE_ID = 1004; 
+const CURRENT_EMPLOYEE_ID = 1004;
 
-// สีสำหรับประเภทการลา (สามารถดึงมาจาก DB หรือกำหนดไว้ที่นี่ก็ได้)
+// สีสำหรับประเภทการลา
 const leaveTypeColors = {
   'ลาป่วย': '#ff6b6b',
   'ลากิจ': '#4ecdc4',
@@ -23,22 +23,20 @@ const LeaveRequest = () => {
     startDate: '',
     endDate: '',
     reason: '',
-    leaveTypeId: '', // เปลี่ยนเป็น leaveTypeId
+    leaveTypeId: '',
   });
 
   const [selectedLeaveTypeFilter, setSelectedLeaveTypeFilter] = useState('all');
 
-  // ฟังก์ชันสำหรับดึงข้อมูลทั้งหมด
   const fetchData = async () => {
     setLoading(true);
     try {
       const summaryRes = await axios.get(`${API_URL}/summary/${CURRENT_EMPLOYEE_ID}`);
       setLeaveSummary(summaryRes.data.data);
-      // ตั้งค่า leaveTypeId เริ่มต้นในฟอร์ม
       if (summaryRes.data.data.length > 0) {
         setLeaveForm(prev => ({ ...prev, leaveTypeId: summaryRes.data.data[0].id }));
       }
-      
+
       const historyRes = await axios.get(`${API_URL}/history/${CURRENT_EMPLOYEE_ID}`);
       setLeaveHistory(historyRes.data.data);
 
@@ -75,6 +73,25 @@ const LeaveRequest = () => {
       return;
     }
 
+    const days = calculateDays(leaveForm.startDate, leaveForm.endDate);
+    if (days <= 0) {
+        alert("วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น และต้องลาอย่างน้อย 1 วัน");
+        return;
+    }
+
+    // --- LOGIC การตรวจสอบสิทธิ์คงเหลือ ---
+    const selectedLeaveSummary = leaveSummary.find(
+      summary => summary.id === parseInt(leaveForm.leaveTypeId)
+    );
+
+    if (selectedLeaveSummary && days > selectedLeaveSummary.remaining) {
+      alert(
+        `ยื่นคำร้องไม่สำเร็จ!\n\nคุณขอลา ${days} วัน แต่มีสิทธิ์การลาประเภทนี้เหลือเพียง ${selectedLeaveSummary.remaining} วัน`
+      );
+      return; // หยุดการทำงาน
+    }
+    // --- สิ้นสุด LOGIC การตรวจสอบ ---
+
     const newRequest = {
       ...leaveForm,
       employeeId: CURRENT_EMPLOYEE_ID,
@@ -84,7 +101,6 @@ const LeaveRequest = () => {
       await axios.post(`${API_URL}/request`, newRequest);
       alert('ส่งคำร้องการลาเรียบร้อยแล้ว!');
       fetchData(); // ดึงข้อมูลใหม่
-      // Reset form
       setLeaveForm({
         startDate: '',
         endDate: '',
@@ -106,17 +122,15 @@ const LeaveRequest = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <header className="mb-8">
           <p className="text-gray-600 mt-2">จัดการคำร้องขอลาและติดตามสถานะการลาของคุณ</p>
         </header>
 
-        {/* สรุปการลา */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 สรุปสิทธิ์การลา</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {leaveSummary.map(summary => {
-              const percentage = (summary.used / summary.quota) * 100;
+              const percentage = summary.quota > 0 ? (summary.used / summary.quota) * 100 : 0;
               const color = leaveTypeColors[summary.name] || '#ccc';
               return (
                 <div key={summary.id} className="bg-white rounded-lg shadow-md p-6 border-l-4" style={{ borderLeftColor: color }}>
@@ -137,22 +151,18 @@ const LeaveRequest = () => {
           </div>
         </section>
 
-        {/* ฟอร์มคำร้องการลา */}
         <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">✍️ ยื่นคำร้องการลา</h2>
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* วันที่เริ่มลา */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">วันที่เริ่มลา *</label>
                         <input type="date" name="startDate" value={leaveForm.startDate} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required/>
                     </div>
-                    {/* วันที่สิ้นสุด */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">วันที่สิ้นสุด *</label>
                         <input type="date" name="endDate" value={leaveForm.endDate} onChange={handleInputChange} min={leaveForm.startDate} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required/>
                     </div>
-                    {/* ประเภทการลา */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">ประเภทการลา *</label>
                         <select name="leaveTypeId" value={leaveForm.leaveTypeId} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
@@ -161,25 +171,21 @@ const LeaveRequest = () => {
                             ))}
                         </select>
                     </div>
-                    {/* จำนวนวัน */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">จำนวนวัน</label>
                         <input type="text" value={`${calculateDays(leaveForm.startDate, leaveForm.endDate)} วัน`} disabled className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg"/>
                     </div>
-                    {/* เหตุผลการลา */}
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">เหตุผลการลา *</label>
                         <textarea name="reason" value={leaveForm.reason} onChange={handleInputChange} rows="3" placeholder="กรุณาระบุเหตุผลการลา..." className="w-full px-4 py-2 border border-gray-300 rounded-lg" required></textarea>
                     </div>
                 </div>
-                {/* ปุ่มส่ง */}
                 <div className="mt-6">
                     <button type="submit" className="w-full bg-sky-400 text-black py-3 px-6 rounded-lg font-medium hover:bg-sky-500 transition-colors shadow-md">📤 ส่งคำร้องการลา</button>
                 </div>
             </form>
         </section>
 
-        {/* ตารางประวัติการลา */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-900">📜 ประวัติการลา</h2>
@@ -209,7 +215,7 @@ const LeaveRequest = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{leave.days} วัน</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                          leave.Status === 'อนุมัติแล้ว' ? 'bg-green-100 text-green-800' : 
+                          leave.Status === 'อนุมัติแล้ว' ? 'bg-green-100 text-green-800' :
                           leave.Status === 'ไม่อนุมัติ' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'}`}>{leave.Status}
                         </span>
@@ -221,9 +227,9 @@ const LeaveRequest = () => {
             </div>
           </div>
         </section>
-        
+
         <div className="mt-8">
-            <Link to="/employee/dashboard" className="inline-flex items-center text-viridian-600 hover:text-viridian-700 font-medium">← กลับไปหน้าแรก</Link>
+            <Link to="/employee/dashboard" className="inline-flex items-center text-sky-600 hover:text-sky-700 font-medium">← กลับไปหน้าแรก</Link>
         </div>
       </div>
     </div>
